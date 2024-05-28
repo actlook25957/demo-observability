@@ -1,12 +1,16 @@
 <template>
   <v-app>
     <v-container>
-      <v-data-table :items="answer"></v-data-table>
+      <atom-spinner v-if="loading" :animation-duration="1000" :size="200" :color="'#ff1d5e'" />
+      <template v-else>
+        <v-data-table :items="answer"></v-data-table>
+      </template>
     </v-container>
   </v-app>
 </template>
 <script>
 import axios from "axios";
+import { AtomSpinner } from 'epic-spinners'
 
 axios.interceptors.request.use(
   (config) => {
@@ -24,7 +28,7 @@ axios.interceptors.request.use(
 
 axios.interceptors.response.use(
   (response) => {
-    // console.log(response);
+    console.log(response);
     response.data.foo = "bar";
     return response;
   },
@@ -34,10 +38,14 @@ axios.interceptors.response.use(
 );
 
 export default {
+  components: {
+    AtomSpinner
+  },
   name: "App",
   data() {
     return {
       answer: [],
+      loading: true
     };
   },
   methods: {
@@ -46,12 +54,13 @@ export default {
       for (let i = 0; i < data.length; i++) {
         var crated = new Date(data[i].created)
         var updated = new Date(data[i].updated)
-        crated = crated.getDate() + '/' +  crated.getMonth() + '/' + crated.getFullYear() + ' ' + crated.getHours() + ':' + crated.getMinutes() + ':' + crated.getSeconds()
-        updated = updated.getDate() + '/' +  updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
+        crated = crated.getDate() + '/' + crated.getMonth() + '/' + crated.getFullYear() + ' ' + crated.getHours() + ':' + crated.getMinutes() + ':' + crated.getSeconds()
+        updated = updated.getDate() + '/' + updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
         data[i].created = crated
         data[i].updated = updated
       }
       this.answer = data;
+      this.loading = false;
     },
   },
   beforeMount() {
@@ -59,3 +68,9 @@ export default {
   },
 };
 </script>
+
+<style>
+.container {
+  justify-content: center;
+}
+</style>
