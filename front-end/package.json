@@ -12,6 +12,7 @@
     "epic-spinners": "^2.0.0",
     "roboto-fontface": "*",
     "vue": "^3.4.0",
+    "vue-router": "^4.3.2",
     "vuetify": "^3.5.0"
   },
   "devDependencies": {

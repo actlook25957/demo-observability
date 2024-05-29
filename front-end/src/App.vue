@@ -1,41 +1,64 @@
 <template>
-  <!-- <div class="text-center"> -->
   <v-app>
-    <v-container >
-      <v-data-table :items="answer">
-        <template v-slot:body="{ items }">
-      <tr v-for="item in items" :key="item">
-        <td>{{ item.id }}</td>
-        <td>{{ item.orgId }}</td>
-        <td>{{ item.name }}</td>
-        <td>{{ item.created }}</td>
-        <td>{{ item.updated }}</td>
-        <td><v-icon large @click="deleteFob(item)"> mdi-access-point-remove </v-icon></td>
-      </tr>
-    </template>
-      </v-data-table>
-      <!-- <tr v-for="item in answer" :key="item.scannedDeviceId">
-        <td>{{ item.id }}</td>
-        <td>{{ item.org_id }}</td>
-        <td>{{ item.name }}</td>
-        <td>{{ item.created }}</td>
-        <td>{{ item.updated }}</td>
-        <td><v-icon large @click="deleteFob(item)"> mdi-access-point-remove </v-icon></td>
-      </tr> -->
-    </v-container>
+
+    <!-- Header -->
+    <v-app-bar app color="primary" dark>
+      <v-toolbar-title class="text-h6">User Management</v-toolbar-title>
+    </v-app-bar>
+
+       <!-- Main Content -->
+       <v-main>
+        <v-container fluid>
+        <!-- Title -->
+        <h1 class="text-center my-4">Users</h1>
+
+        <!-- Data Table -->
+        <v-data-table :items="answer" class="elevation-1" :headers="headers">
+          <template v-slot:body="{ items }">
+              <tr v-for="item in items" :key="item.id">
+                <td>{{ item.id }}</td>
+                <td>{{ item.orgId }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.created }}</td>
+                <td>{{ item.updated }}</td>
+                <td>
+                  <v-btn
+                    class="text-none"
+                    color="primary"
+                    outlined
+                    @click="getUserById(item.id)"
+                  >
+                    More Info
+                  </v-btn>
+                </td>
+              </tr>
+          </template>
+        </v-data-table>
+      </v-container>
+  </v-main>
+      <!-- Footer -->
+      <v-footer color="primary" app>
+      <v-col class="text-center white--text py-4">
+        © 2024 Siam Chamnan Kit. All rights reserved.
+      </v-col>
+    </v-footer>
+
   </v-app>
+
+
+  <!-- Loading Overlay -->
   <div>
     <v-overlay v-model="loading">
-      <div class="d-flex justify-center">
+      <v-container fluid class="d-flex align-center justify-center" style="height: 100vh;">
         <v-progress-circular color="primary" indeterminate />
-      </div>
+      </v-container>
     </v-overlay>
   </div>
-  <!-- </div> -->
 </template>
+
 <script>
 import axios from "axios";
-import { AtomSpinner } from 'epic-spinners'
+import { ref, computed } from 'vue'
 
 axios.interceptors.request.use(
   (config) => {
@@ -47,6 +70,7 @@ axios.interceptors.request.use(
   },
   (error) => {
     console.log(error);
+    alert(error)
     return Promise.reject(error);
   }
 );
@@ -63,18 +87,32 @@ axios.interceptors.response.use(
 );
 
 export default {
-  components: {
-    AtomSpinner
-  },
   name: "App",
   data() {
     return {
       answer: [],
       loading: true,
-      error_res: {}
+      error_res: {},
+      data: {},
+
     };
   },
   methods: {
+    async getUserById(id) {
+      const { data } = await axios.get("http://localhost:8080/api/v1/users/" + id);
+      for (let i = 0; i < data.length; i++) {
+        var crated = new Date(data[i].created)
+        var updated = new Date(data[i].updated)
+        crated = crated.getDate() + '/' + crated.getMonth() + '/' + crated.getFullYear() + ' ' + crated.getHours() + ':' + crated.getMinutes() + ':' + crated.getSeconds()
+        updated = updated.getDate() + '/' + updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
+        data[i].created = crated
+        data[i].updated = updated
+      }
+      if (data.id) {
+        alert("Hello " + data.name)
+      } else alert("error")
+
+    },
     async getUser() {
       const { data } = await axios.get("http://localhost:8080/api/v1/users");
       for (let i = 0; i < data.length; i++) {
@@ -84,6 +122,7 @@ export default {
         updated = updated.getDate() + '/' + updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
         data[i].created = crated
         data[i].updated = updated
+        data[i].info = null
       }
       this.answer = data;
       this.loading = false;
@@ -95,12 +134,26 @@ export default {
   },
   beforeMount() {
     this.getUser();
+
   },
 };
 </script>
 
 <style>
-.container {
-  justify-content: center;
+.v-overlay__content {
+  width: 100%;
+  height: 100%;
+}
+.v-container {
+  padding-top: 32px;
+}
+
+.v-data-table {
+  background-color: white;
+  border-radius: 8px;
+}
+
+.v-btn {
+  min-width: 120px;
 }
 </style>
