@@ -6,45 +6,48 @@
       <v-toolbar-title class="text-h6">User Management</v-toolbar-title>
     </v-app-bar>
 
-       <!-- Main Content -->
-       <v-main>
-        <v-container fluid>
+    <!-- Main Content -->
+    <v-main>
+      <v-container fluid>
         <!-- Title -->
         <h1 class="text-center my-4">Users</h1>
 
         <!-- Data Table -->
         <v-data-table :items="answer" class="elevation-1" :headers="headers">
           <template v-slot:body="{ items }">
-              <tr v-for="item in items" :key="item.id">
-                <td>{{ item.id }}</td>
-                <td>{{ item.orgId }}</td>
-                <td>{{ item.name }}</td>
-                <td>{{ item.created }}</td>
-                <td>{{ item.updated }}</td>
-                <td>
-                  <v-btn
-                    class="text-none"
-                    color="primary"
-                    outlined
-                    @click="getUserById(item.id)"
-                  >
-                    More Info
-                  </v-btn>
-                </td>
-              </tr>
+            <tr v-for="item in items" :key="item.id">
+              <td>{{ item.id }}</td>
+              <td>{{ item.orgId }}</td>
+              <td>{{ item.name }}</td>
+              <td>{{ item.created }}</td>
+              <td>{{ item.updated }}</td>
+              <td>
+                <v-dialog max-width="500">
+                  <template v-slot:activator="{ props: activatorProps }">
+                    <v-btn v-bind="activatorProps" color="surface-variant" text="More info" variant="flat"></v-btn>
+                  </template>
+
+                  <template v-slot:default="{ isActive }">
+                    <v-card title="Dialog">
+                      <v-card-text>
+                        {{  getUserById(item.id) }}
+                      </v-card-text>
+
+                      <v-card-actions>
+                        <v-spacer></v-spacer>
+
+                        <v-btn text="Close Dialog" @click="isActive.value = false"></v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </template>
+                </v-dialog>
+              </td>
+            </tr>
           </template>
         </v-data-table>
       </v-container>
-  </v-main>
-      <!-- Footer -->
-      <v-footer color="primary" app>
-      <v-col class="text-center white--text py-4">
-        © 2024 Siam Chamnan Kit. All rights reserved.
-      </v-col>
-    </v-footer>
-
+    </v-main>
   </v-app>
-
 
   <!-- Loading Overlay -->
   <div>
@@ -144,6 +147,7 @@ export default {
   width: 100%;
   height: 100%;
 }
+
 .v-container {
   padding-top: 32px;
 }
