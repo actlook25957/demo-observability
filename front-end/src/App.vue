@@ -1,6 +1,5 @@
 <template>
   <v-app>
-
     <!-- Header -->
     <v-app-bar app color="primary" dark>
       <v-toolbar-title class="text-h6">User Management</v-toolbar-title>
@@ -24,19 +23,19 @@
               <td>
                 <v-dialog max-width="500">
                   <template v-slot:activator="{ props: activatorProps }">
-                    <v-btn v-bind="activatorProps" color="surface-variant" text="More info" variant="flat"></v-btn>
+                    <v-btn v-bind="activatorProps" color="surface-variant" text="More info" variant="flat"
+                      @click="getUserById(item.id)"></v-btn>
                   </template>
 
-                  <template v-slot:default="{ isActive }">
-                    <v-card title="Dialog">
+                  <template v-if="error" v-slot:default="{ isActive }">
+                    <v-card>
+                      <v-card-title>Info</v-card-title>
                       <v-card-text>
-                        {{  getUserById(item.id) }}
+                        {{ info }}
                       </v-card-text>
-
                       <v-card-actions>
                         <v-spacer></v-spacer>
-
-                        <v-btn text="Close Dialog" @click="isActive.value = false"></v-btn>
+                        <v-btn text @click="isActive.value = false">Close</v-btn>
                       </v-card-actions>
                     </v-card>
                   </template>
@@ -57,6 +56,18 @@
       </v-container>
     </v-overlay>
   </div>
+
+    <!-- Centered Snackbar -->
+    <v-container fluid class="d-flex align-center justify-center custom-container">
+      <v-snackbar v-model="snackbar.show" :timeout="snackbar.timeout" color="error" class="custom-snackbar">
+        {{ snackbar.message }}
+        <template v-slot:action="{ attrs }">
+          <v-btn color="white" text v-bind="attrs" @click="snackbar.show = false">
+            Close
+          </v-btn>
+        </template>
+      </v-snackbar>
+    </v-container>
 </template>
 
 <script>
@@ -73,18 +84,6 @@ axios.interceptors.request.use(
   },
   (error) => {
     console.log(error);
-    alert(error)
-    return Promise.reject(error);
-  }
-);
-
-axios.interceptors.response.use(
-  (response) => {
-    console.log(response);
-    response.data.foo = "bar";
-    return response;
-  },
-  (error) => {
     return Promise.reject(error);
   }
 );
@@ -97,47 +96,57 @@ export default {
       loading: true,
       error_res: {},
       data: {},
-
+      info: {},
+      error: true,
+      snackbar: {
+        show: false,
+        message: '',
+        timeout: 3000
+      }
     };
   },
   methods: {
     async getUserById(id) {
-      const { data } = await axios.get("http://localhost:8080/api/v1/users/" + id);
-      for (let i = 0; i < data.length; i++) {
-        var crated = new Date(data[i].created)
-        var updated = new Date(data[i].updated)
+      try {
+        this.error = true;
+        const { data } = await axios.get("http://localhost:8080/api/v1/users/" + id);
+        var crated = new Date(data.created)
+        var updated = new Date(data.updated)
         crated = crated.getDate() + '/' + crated.getMonth() + '/' + crated.getFullYear() + ' ' + crated.getHours() + ':' + crated.getMinutes() + ':' + crated.getSeconds()
         updated = updated.getDate() + '/' + updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
-        data[i].created = crated
-        data[i].updated = updated
+        data.created = crated
+        data.updated = updated
+        this.info = data
+      } catch (error) {
+        this.error = false
+        this.handleError(error);
       }
-      if (data.id) {
-        alert("Hello " + data.name)
-      } else alert("error")
-
     },
     async getUser() {
-      const { data } = await axios.get("http://localhost:8080/api/v1/users");
-      for (let i = 0; i < data.length; i++) {
-        var crated = new Date(data[i].created)
-        var updated = new Date(data[i].updated)
-        crated = crated.getDate() + '/' + crated.getMonth() + '/' + crated.getFullYear() + ' ' + crated.getHours() + ':' + crated.getMinutes() + ':' + crated.getSeconds()
-        updated = updated.getDate() + '/' + updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
-        data[i].created = crated
-        data[i].updated = updated
-        data[i].info = null
+      try {
+        const { data } = await axios.get("http://localhost:8080/api/v1/users");
+        for (let i = 0; i < data.length; i++) {
+          var crated = new Date(data[i].created)
+          var updated = new Date(data[i].updated)
+          crated = crated.getDate() + '/' + crated.getMonth() + '/' + crated.getFullYear() + ' ' + crated.getHours() + ':' + crated.getMinutes() + ':' + crated.getSeconds()
+          updated = updated.getDate() + '/' + updated.getMonth() + '/' + updated.getFullYear() + ' ' + updated.getHours() + ':' + updated.getMinutes() + ':' + updated.getSeconds()
+          data[i].created = crated
+          data[i].updated = updated
+          data[i].info = null
+        }
+        this.answer = data;
+        this.loading = false;
+      } catch (error) {
+        this.handleError(error);
       }
-      this.answer = data;
-      this.loading = false;
     },
-    async getError() {
-      const { data } = await axios.get("http://localhost:8080");
-      this.error_res = data;
-    },
+    handleError(error) {
+      this.snackbar.message = "Error: " + (error.response ? error.response.statusText : "Unknown Error");
+      this.snackbar.show = true;
+    }
   },
   beforeMount() {
     this.getUser();
-
   },
 };
 </script>
@@ -159,5 +168,18 @@ export default {
 
 .v-btn {
   min-width: 120px;
+}
+
+.custom-container {
+  height: 100vh;
+}
+
+.custom-snackbar {
+  max-width: 300px;
+  text-align: center;
+  position: absolute; /* Ensures proper centering */
+  top: 50%; /* Centers vertically */
+  left: 50%; /* Centers horizontally */
+  transform: translate(-50%, -50%); /* Corrects position offset */
 }
 </style>
